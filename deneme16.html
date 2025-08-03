@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Sevgi Ölçer 💖</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous"
+  />
+  <!-- Konfeti animasyonu için canvas-confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  
+  <style>
+    /* Tema ve ana renk değişkenleri */
+    :root {
+      --bg: #fafafa;
+      --text: #333;
+      --track-bg: #ddd;
+      --btn-bg: #ff4081;
+      --btn-hover: #e33370;
+      --primary: #ff4081;
+      --overflow: #e53935;
+      --tab-bg: #fff;
+      --tab-color: #888;
+      --tab-active-bg: var(--primary);
+      --tab-active-color: #fff;
+    }
+    [data-theme="dark"] {
+      --bg: #222;
+      --text: #eee;
+      --track-bg: #444;
+      --btn-bg: #ff4081;
+      --btn-hover: #e33370;
+      --primary: #ff4081;
+      --overflow: #e53935;
+      --tab-bg: #333;
+      --tab-color: #bbb;
+      --tab-active-bg: var(--primary);
+      --tab-active-color: #fff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+    }
+    .tabs {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      padding: 10px;
+      background: var(--tab-bg);
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    }
+    .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 20px;
+      background: var(--tab-bg);
+      border-radius: 30px;
+      color: var(--tab-color);
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s, transform 0.2s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .tab.active {
+      background: var(--tab-active-bg);
+      color: var(--tab-active-color);
+      transform: translateY(-2px);
+    }
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      cursor: pointer;
+      color: var(--text);
+      transition: color 0.3s;
+    }
+    .theme-toggle:hover {
+      color: var(--primary);
+    }
+
+    .love-meter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+    .love-meter h2 {
+      color: var(--primary);
+      font-size: 1.6rem;
+    }
+    .warning {
+      color: var(--overflow);
+      font-weight: bold;
+      visibility: hidden;
+      animation: pop 0.3s ease both;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 80%;
+      height: 8px;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--track-bg);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border: 3px solid var(--primary);
+      border-radius: 50%;
+      margin-top: -6px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    input.over-limit::-webkit-slider-runnable-track {
+      background: var(--overflow);
+    }
+    input.over-limit::-webkit-slider-thumb {
+      border-color: var(--overflow);
+      animation: shake 0.3s ease-in-out;
+    }
+    @keyframes pop {
+      from { transform: scale(0.8); }
+      to   { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%     { transform: translateX(-4px); }
+      50%     { transform: translateX(4px); }
+      75%     { transform: translateX(-4px); }
+    }
+    .value {
+      font-size: 1.4rem;
+      color: var(--primary);
+    }
+    .compare-btn {
+      padding: 8px 24px;
+      background: var(--btn-bg);
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: background 0.2s, transform 0.1s;
+    }
+    .compare-btn:hover { background: var(--btn-hover); }
+    .compare-btn:active { transform: scale(0.98); }
+
+    .result {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.8rem;
+      color: var(--primary);
+    }
+    .back-btn, .reward-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      border: 2px solid var(--primary);
+      background: #fff;
+      color: var(--primary);
+      transition: background 0.2s, color 0.2s;
+    }
+    .back-btn:hover, .reward-btn:not([disabled]):hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    .reward-btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .heart-container {
+      position: relative;
+      width: 80%;
+      height: 0;
+      pointer-events: none;
+      margin: 0 auto;
+    }
+    .heart {
+      position: absolute;
+      bottom: 0;
+      font-size: 1.2rem;
+      color: var(--overflow);
+      animation: rise 1s ease-out forwards;
+      opacity: 0;
+    }
+    @keyframes rise {
+      0%   { transform: translateY(0) scale(0.8); opacity: 1; }
+      100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
+    }
+
+  </style>
+</head>
+<body data-theme="light">
+  <div class="content" id="main-content">Merhaba! Bir sekme seç 😊</div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('Sevgi Ölçer', this)">
+      <i class="fa-solid fa-heart"></i><span>Sevgi Ölçer</span>
+    </div>
+    <div class="tab" onclick="switchTab('Anılar', this)">
+      <i class="fa-solid fa-camera-retro"></i><span>Anılar</span>
+    </div>
+    <div class="tab" onclick="switchTab('Mektup', this)">
+      <i class="fa-solid fa-envelope"></i><span>Mektup</span>
+    </div>
+    <div id="theme-toggle" class="theme-toggle">
+      <i class="fa-regular fa-moon"></i>
+    </div>
+  </div>
+
+  <script>
+    const LIMIT = 10;
+    const MAX_VALUE = 12;
+    let lastValue = 5;
+
+    function switchTab(name, el) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const container = document.getElementById('main-content');
+      if (name === 'Sevgi Ölçer') renderLoveMeter(container);
+      else if (name === 'Anılar') container.textContent = 'Anılar sekmesi seçildi.';
+      else container.textContent = 'Mektup sekmesi seçildi.';
+    }
+    
+
+   function renderLoveMeter(container) {
+  container.innerHTML = `
+    <div class="love-meter">
+      <h2>Bugün Seni Ne Kadar Seviyorum?</h2>
+      <div class="warning" id="warning">Aşk limiti aşıldı!</div>
+      <div class="heart-container" id="heartContainer"></div>
+      <input type="range" id="loveRange" min="0" max="12" step="1">
+      <div class="value" id="loveValue"></div>
+      <button class="compare-btn" id="compareBtn">kıyasla</button>
+    </div>`;
+  
+  const slider   = document.getElementById('loveRange');
+  const disp     = document.getElementById('loveValue');
+  const warn     = document.getElementById('warning');
+  const btn      = document.getElementById('compareBtn');
+  const hearts   = document.getElementById('heartContainer');
+
+  slider.value = lastValue;
+  updateUI();
+
+  slider.addEventListener('input', () => {
+    lastValue = +slider.value;
+    updateUI();
+
+    // 1. Kalp ikonu ekle
+    const heart = document.createElement('div');
+    heart.className = 'heart fa fa-heart';
+    const pct = (slider.value - slider.min) / (slider.max - slider.min);
+    heart.style.left = `calc(${pct * 100}% - 10px)`;
+    hearts.appendChild(heart);
+    setTimeout(() => hearts.removeChild(heart), 1000);
+
+    // 2. Haptik
+    if (navigator.vibrate) navigator.vibrate(20);
+
+    // 3. Ses
+    playBeep();
+
+    // 4. Konfeti (12’de)
+    if (lastValue === MAX_VALUE) {
+      confetti({ particleCount: 150, spread: 60, origin: { y: 0.6 } });
+    }
+  });
+
+  btn.addEventListener('click', () => showResult(lastValue));
+
+  function updateUI() {
+    const v = +slider.value;
+    disp.textContent      = v;
+    disp.style.color      = v > LIMIT ? 'var(--overflow)' : 'var(--primary)';
+    warn.style.visibility = v > LIMIT ? 'visible' : 'hidden';
+    slider.classList.toggle('over-limit', v > LIMIT);
+  }
+}
+
+    function showResult(value) {
+  const container = document.getElementById('main-content');
+  container.innerHTML = `
+    <div class="result">
+      <button class="back-btn" id="backBtn">Geri</button>
+      <button class="reward-btn" id="rewardBtn" ${value === MAX_VALUE ? '' : 'disabled'}>Özel</button>
+      <div>${value} mi verdin... Küstüm</div>
+    </div>`;
+
+  const backBtn   = document.getElementById('backBtn');
+  const rewardBtn = document.getElementById('rewardBtn');
+  backBtn.addEventListener('click', () => {
+    const firstTab = document.querySelector('.tab.active');
+    switchTab('Sevgi Ölçer', firstTab);
+  });
+
+  rewardBtn.addEventListener('click', () => {
+    if (value !== MAX_VALUE) {
+      alert('yeterli sevgi girilmedi');
+    } else {
+      alert('Tebrikler! En yüksek sevgiyi verdin 🎉');
+    }
+  });
+}
+
+    // Gece/Gündüz Modu
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    function updateToggleIcon(theme) {
+      const icon = document.querySelector('#theme-toggle i');
+      icon.className = theme === 'light'
+        ? 'fa-regular fa-moon'
+        : 'fa-regular fa-sun';
+    }
+    function initThemeToggle() {
+      const toggleBtn  = document.getElementById('theme-toggle');
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      applyTheme(savedTheme);
+      updateToggleIcon(savedTheme);
+      toggleBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next    = current === 'light' ? 'dark' : 'light';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+        updateToggleIcon(next);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initThemeToggle();
+      document.querySelector('.tab.active').click();
+    });
+  </script>
+</body>
+</html>
